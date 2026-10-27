@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vòng Tròn Phép Màu</title>
+<meta name="description" content="Cùng thực hành 365 bài A Course in Miracles">
+<meta name="theme-color" content="#EDF0F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121621" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Phép Màu">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,500;0,7..72,600;1,7..72,400;1,7..72,500&display=swap">
+<style>
+/* Layout: one-column phone app — mascot stage, lesson card, bottom tab bar. */
+:root{
+  --bg:#EDF0F5; --surface:#FFFFFF; --surface-2:#F5F3EE; --ink:#1D2230; --muted:#5E6577; --line:#D9DDE6;
+  --gold:#B87A12; --gold-soft:#F6E7C4; --lotus:#C9567A; --lotus-soft:#F7DCE5; --leaf:#3F7E62; --leaf-soft:#D7EBE0;
+  --water:#C9D7EA; --soil:#B79B7E; --danger:#B3402E;
+  --display:"Literata", Georgia, "Times New Roman", serif;
+  --body:"Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121621; --surface:#1B2030; --surface-2:#222839; --ink:#ECEEF4; --muted:#A1A8BA; --line:#2E3548;
+  --gold:#E2AE4A; --gold-soft:#3A3020; --lotus:#E88AA8; --lotus-soft:#3A2330; --leaf:#7CC3A0; --leaf-soft:#1F3329;
+  --water:#273752; --soil:#5A4A3B; --danger:#F08A78; color-scheme:dark }}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px)}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+img{max-width:100%}
+[hidden]{display:none!important}
+.app{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px calc(110px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-style:italic;font-weight:500;font-size:24px;letter-spacing:-.01em}
+.brand small{display:block;font-family:var(--body);font-style:normal;font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.who{font-size:13px;color:var(--muted)}
+.banner{background:var(--gold-soft);color:var(--ink);border-radius:12px;padding:10px 14px;font-size:13.5px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px}
+.label{font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600}
+h1,h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0;text-wrap:balance}
+h1{font-size:28px;font-style:italic;font-weight:500}
+h3{font-family:var(--display);font-weight:600;font-size:17px;margin:0}
+p{margin:0}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn{border:0;border-radius:999px;padding:12px 18px;font-weight:600;background:var(--ink);color:var(--bg)}
+.btn.gold{background:var(--gold);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.small{padding:7px 13px;font-size:13px}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.45;cursor:default}
+.linkbtn{border:0;background:none;color:var(--muted);text-decoration:underline;padding:0;font-size:13.5px}
+input,textarea,select{font:inherit;font-size:16px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
+textarea{min-height:84px;resize:vertical}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);flex:none}
+input[type=time]{width:auto;min-width:110px}
+select{width:auto}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:13px;color:var(--muted);font-weight:500}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--muted)}
+.small{font-size:13.5px}
+.num{font-variant-numeric:tabular-nums}
+.err{color:var(--danger);font-size:13.5px}
+
+/* Auth */
+.auth{max-width:420px;margin:0 auto;min-height:100vh;padding:32px max(16px,env(safe-area-inset-left,0px)) 40px;display:flex;flex-direction:column;gap:18px;justify-content:center}
+.auth .hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.auth .hero svg{width:170px;height:auto}
+.seg{display:flex;background:var(--surface-2);border-radius:999px;padding:4px;border:1px solid var(--line)}
+.seg button{flex:1;border:0;background:none;border-radius:999px;padding:8px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* Mascot stage */
+.stage{background:radial-gradient(120% 90% at 50% 20%,var(--gold-soft),var(--surface) 70%);border:1px solid var(--line);border-radius:22px;padding:14px 18px 18px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.stage svg{width:min(240px,70vw);height:auto;max-width:100%}
+.petname{font-family:var(--display);font-size:22px;font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
+.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.chip{font-size:12.5px;padding:4px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
+.chip.gold{background:var(--gold-soft);border-color:transparent}
+.chip.leaf{background:var(--leaf-soft);border-color:transparent}
+.bar{width:100%;height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--leaf),var(--gold));border-radius:99px;transition:width .6s ease}
+.path{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;width:100%;margin-top:4px}
+.path span{font-size:10.5px;color:var(--muted);text-align:center;padding-top:6px;border-top:3px solid var(--line)}
+.path span.on{color:var(--ink);border-top-color:var(--gold);font-weight:600}
+
+.lesson-no{font-family:var(--display);font-size:52px;line-height:1;font-weight:500;font-variant-numeric:tabular-nums}
+.lesson-no em{font-size:18px;color:var(--muted);font-style:italic;margin-left:6px}
+.note{background:var(--surface-2);border-radius:12px;padding:12px 14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.done{background:var(--leaf-soft);border-radius:12px;padding:12px 14px}
+.counter{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface-2);border-radius:14px;padding:10px 12px}
+.counter b{font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums}
+.tap{width:52px;height:52px;border-radius:50%;border:0;background:var(--gold);color:#fff;font-size:24px;line-height:1}
+
+.session{display:flex;flex-direction:column;gap:8px;padding:14px 0;border-top:1px solid var(--line)}
+.session:first-child{border-top:0;padding-top:0}
+.when{font-size:12.5px;color:var(--gold);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+a.link{color:var(--ink);font-weight:600;text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:3px}
+.next{border-left:4px solid var(--gold)}
+
+.members{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.member{background:var(--surface-2);border-radius:14px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;min-width:0}
+.member svg{width:84px;height:84px}
+.member .n{font-weight:600;font-size:13.5px;overflow-wrap:anywhere}
+.member .s{font-size:12px;color:var(--muted)}
+.post{display:flex;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.post:first-child{border-top:0}
+.av{width:32px;height:32px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;color:#fff}
+.post>div{min-width:0}
+.meta{font-size:12.5px;color:var(--muted)}
+.post p{white-space:pre-wrap;overflow-wrap:anywhere}
+.empty{color:var(--muted);font-style:italic;font-family:var(--display)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px}
+.grid button{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:10px;padding:8px 0;font-variant-numeric:tabular-nums;font-size:13.5px;position:relative}
+.grid button.has::after{content:"";position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--lotus)}
+.grid button.cur{border-color:var(--gold);background:var(--gold-soft);font-weight:600}
+.grid button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;background:var(--lotus)}
+.legend span.c::before{background:var(--gold)}
+.mine{border-left:3px solid var(--lotus);padding:6px 0 6px 12px}
+.mine p{white-space:pre-wrap;overflow-wrap:anywhere}
+
+.opt{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.opt:first-of-type{border-top:0}
+.opt>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.opt b{font-weight:600}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.share-ico{display:inline-block;width:18px;height:18px;vertical-align:-3px}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--surface-2);padding:2px 8px;border-radius:6px;font-size:15px;letter-spacing:.06em}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));display:flex;justify-content:center;gap:2px;z-index:5}
+nav.tabs button{flex:1;max-width:120px;border:0;background:none;padding:9px 2px;border-radius:12px;color:var(--muted);font-weight:600;font-size:12.5px;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--gold-soft);color:var(--ink)}
+
+.overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:20;padding:24px}
+.overlay .card{max-width:360px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
+.overlay svg{width:200px;height:auto}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13.5px;z-index:30;max-width:90vw;text-align:center}
+.loading{min-height:80vh;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--display);font-style:italic}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bob{animation:bob 4s ease-in-out infinite;transform-box:fill-box}
+@media (prefers-reduced-motion:reduce){.bob{animation:none}.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div id="loading" class="loading">Đang mở vòng tròn…</div>
+
+<!-- AUTH -->
+<div id="auth" class="auth" hidden>
+  <div class="hero"><div id="authMascot"></div><h1>Vòng Tròn Phép Màu</h1><p class="muted small">Cùng thực hành 365 bài A Course in Miracles</p></div>
+  <div class="seg" role="group" aria-label="Chọn">
+    <button id="modeLogin" aria-pressed="true">Đăng nhập</button>
+    <button id="modeSignup" aria-pressed="false">Tạo tài khoản</button>
+  </div>
+  <form id="authForm" class="card stack" novalidate>
+    <div class="field" id="fName" hidden><label for="aName">Tên của bạn</label><input id="aName" autocomplete="name" maxlength="40"></div>
+    <div class="field"><label for="aEmail">Email</label><input id="aEmail" type="email" autocomplete="email" inputmode="email"></div>
+    <div class="field"><label for="aPass">Mật khẩu</label><input id="aPass" type="password" autocomplete="current-password" minlength="6"></div>
+    <div class="field" id="fCode" hidden><label for="aCode">Mã nhóm (người hướng dẫn gửi cho bạn)</label><input id="aCode" autocomplete="off" autocapitalize="characters"></div>
+    <p class="err" id="authErr" hidden></p>
+    <button class="btn gold wide" id="authSubmit" type="submit">Đăng nhập</button>
+    <button class="linkbtn" id="forgot" type="button">Quên mật khẩu?</button>
+  </form>
+</div>
+
+<!-- JOIN (signed in, not yet member) -->
+<div id="join" class="auth" hidden>
+  <div class="hero"><h1>Vào vòng tròn</h1><p class="muted small">Nhập mã nhóm do người hướng dẫn gửi để bắt đầu.</p></div>
+  <form id="joinForm" class="card stack" novalidate>
+    <div class="field"><label for="jName">Tên của bạn</label><input id="jName" maxlength="40"></div>
+    <div class="field"><label for="jCode">Mã nhóm</label><input id="jCode" autocomplete="off" autocapitalize="characters"></div>
+    <p class="err" id="joinErr" hidden></p>
+    <button class="btn gold wide" type="submit">Vào nhóm</button>
+    <button class="linkbtn" id="joinOut" type="button">Đăng xuất</button>
+  </form>
+</div>
+
+<!-- APP -->
+<div id="main" hidden>
+<div class="app">
+  <header class="top">
+    <div class="brand">Vòng Tròn Phép Màu<small>Cùng thực hành A Course in Miracles</small></div>
+    <div class="who" id="who"></div>
+  </header>
+  <div class="banner" id="banner" hidden></div>
+
+  <section id="tab-homnay" class="stack">
+    <div class="stage" id="stage"></div>
+    <div class="card stack" id="lessonCard"></div>
+    <div class="card stack">
+      <div><div class="label">Nhắc lại trong ngày</div><p class="muted small" style="margin-top:4px">Mỗi lần bạn nhớ đến ý tưởng của bài hôm nay, chạm một lần.</p></div>
+      <div class="counter"><div><b id="remN" class="num">0</b> <span class="muted">lần hôm nay</span></div><button class="tap" id="remBtn" aria-label="Thêm một lần nhớ lại">+</button></div>
+    </div>
+    <div class="card stack">
+      <div class="label">Chia sẻ với vòng tròn</div>
+      <textarea id="reflect" maxlength="1500" placeholder="Hôm nay bài học chạm đến bạn thế nào?"></textarea>
+      <div class="row" style="justify-content:flex-end"><button class="btn small" id="postBtn">Chia sẻ</button></div>
+    </div>
+    <div id="nextTeaser"></div>
+  </section>
+
+  <section id="tab-ontap" class="stack" hidden>
+    <div class="card stack" id="reviewDetail"></div>
+    <div class="card stack">
+      <div class="row" style="justify-content:space-between"><h2>Các bài đã đi qua</h2><span class="muted num" id="reviewCount" style="font-size:13px"></span></div>
+      <div class="legend"><span>Có cảm nhận của bạn</span><span class="c">Bài hiện tại</span></div>
+      <div class="grid" id="reviewGrid"></div>
+      <p class="muted" style="font-size:13px">Ôn lại bài cũ không làm thay đổi tiến trình của bạn.</p>
+    </div>
+  </section>
+
+  <section id="tab-buoihoc" class="stack" hidden>
+    <div class="card stack" id="adminSession" hidden>
+      <h3 id="sessFormTitle">Thêm buổi Zoom</h3>
+      <div class="field"><label for="sTitle">Tên buổi</label><input id="sTitle" placeholder="Buổi 3 · Bài 15–21"></div>
+      <div class="field"><label for="sWhen">Ngày giờ (giờ Việt Nam)</label><input id="sWhen" type="datetime-local"></div>
+      <div class="field"><label for="sZoom">Link Zoom</label><input id="sZoom" placeholder="https://zoom.us/j/…"></div>
+      <div class="field"><label for="sRec">Link video ghi hình (YouTube, Google Drive…)</label><input id="sRec" placeholder="Thêm sau buổi học"></div>
+      <div class="field"><label for="sNote">Ghi chú cho nhóm</label><textarea id="sNote"></textarea></div>
+      <div class="row" style="justify-content:flex-end"><button class="btn ghost small" id="sCancel" hidden>Huỷ sửa</button><button class="btn gold small" id="sSave">Lưu buổi học</button></div>
+    </div>
+    <div class="card stack"><h2>Các buổi Zoom</h2><div id="sessions"><p class="empty">Chưa có buổi nào. Lịch Zoom hàng tuần và video ghi hình sẽ hiện ở đây.</p></div></div>
+    <div class="card stack" id="adminLesson" hidden>
+      <h3>Ghi chú cho một bài học</h3>
+      <p class="muted small">Thành viên đang ở bài nào sẽ thấy ghi chú của bài đó ở trang Hôm nay và Ôn tập. Gõ số bài để mở nội dung đã lưu.</p>
+      <div class="row"><input id="lNo" type="number" min="1" max="365" placeholder="Số bài" style="width:110px"><input id="lTitle" placeholder="Tên bài (tuỳ chọn)" style="flex:1;min-width:0"></div>
+      <textarea id="lNote" placeholder="Gợi ý thực hành, câu hỏi suy ngẫm…"></textarea>
+      <input id="lLink" placeholder="Link đọc bài (tuỳ chọn)">
+      <div class="row" style="justify-content:flex-end"><button class="btn gold small" id="lSave">Lưu ghi chú</button></div>
+    </div>
+  </section>
+
+  <section id="tab-vongtron" class="stack" hidden>
+    <div class="card stack"><h2>Những người bạn đồng hành</h2><div class="members" id="members"><p class="empty">Khi mọi người bắt đầu, linh vật của từng người sẽ hiện ở đây.</p></div></div>
+    <div class="card stack"><h2>Chia sẻ gần đây</h2><div id="feed"><p class="empty">Chưa có chia sẻ nào. Hãy là người đầu tiên.</p></div></div>
+  </section>
+
+  <section id="tab-caidat" class="stack" hidden>
+    <div class="card stack" id="installCard" hidden>
+      <h2>Cài app lên iPhone</h2>
+      <p class="small">Trên iPhone, bạn cần thêm app vào màn hình chính thì mới nhận được nhắc nhở.</p>
+      <ol class="steps small">
+        <li>Mở trang này bằng <b>Safari</b>.</li>
+        <li>Chạm nút <b>Chia sẻ</b> <svg class="share-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> ở thanh dưới cùng.</li>
+        <li>Chọn <b>Thêm vào MH chính</b> (Add to Home Screen), rồi bấm <b>Thêm</b>.</li>
+        <li>Mở app từ biểu tượng mới trên màn hình chính, vào lại trang Cài đặt và bật nhắc nhở.</li>
+      </ol>
+    </div>
+    <div class="card stack" id="installAndroid" hidden>
+      <h2>Cài app lên điện thoại</h2>
+      <p class="small">Thêm app vào màn hình chính để mở nhanh như một app thật.</p>
+      <button class="btn gold" id="installBtn">Cài app</button>
+    </div>
+    <div class="card stack">
+      <h2>Nhắc nhở</h2>
+      <p class="small muted" id="pushStatus"></p>
+      <button class="btn gold" id="pushEnable" hidden>Bật thông báo trên máy này</button>
+      <div id="pushOpts">
+        <div class="opt"><input type="checkbox" id="pMorningOn"><div><label for="pMorningOn"><b>Nhắc đọc bài mỗi sáng</b></label><input type="time" id="pMorningAt" aria-label="Giờ nhắc buổi sáng"></div></div>
+        <div class="opt"><input type="checkbox" id="pEveningOn"><div><label for="pEveningOn"><b>Nhắc buổi tối nếu chưa thực hành</b></label><input type="time" id="pEveningAt" aria-label="Giờ nhắc buổi tối"></div></div>
+        <div class="opt"><input type="checkbox" id="pHourlyOn"><div><label for="pHourlyOn"><b>Nhắc nhớ lại ý tưởng trong ngày</b></label>
+          <div class="row small"><span>từ</span><input type="time" id="pHourlyFrom" aria-label="Bắt đầu"><span>đến</span><input type="time" id="pHourlyTo" aria-label="Kết thúc"></div>
+          <div class="row small"><span>mỗi</span><select id="pHourlyEvery" aria-label="Khoảng cách"><option value="30">30 phút</option><option value="60">1 giờ</option><option value="120">2 giờ</option><option value="180">3 giờ</option></select></div></div></div>
+        <div class="opt"><input type="checkbox" id="pZoom"><div><label for="pZoom"><b>Nhắc trước buổi Zoom 1 tiếng</b></label></div></div>
+        <div class="row" style="justify-content:flex-end;margin-top:6px"><button class="btn small" id="pSave">Lưu cài đặt nhắc nhở</button></div>
+      </div>
+    </div>
+    <div class="card stack" id="adminCode" hidden>
+      <h2>Mã nhóm</h2>
+      <p class="small muted">Học viên cần mã này khi tạo tài khoản. Đổi mã không ảnh hưởng người đã vào nhóm.</p>
+      <p class="small" id="codeNow"></p>
+      <div class="row"><input id="codeInput" placeholder="Ví dụ: PHEPMAU2026" style="flex:1;min-width:0" autocapitalize="characters"><button class="btn gold small" id="codeSave">Lưu mã</button></div>
+      <p class="small muted" id="appLink"></p>
+    </div>
+    <div class="card stack">
+      <h2>Tài khoản</h2>
+      <div class="field"><label for="myName">Tên hiển thị</label><div class="row"><input id="myName" maxlength="40" style="flex:1;min-width:0"><button class="btn ghost small" id="nameSave">Lưu</button></div></div>
+      <p class="small muted" id="myEmail"></p>
+      <button class="btn ghost" id="logout">Đăng xuất</button>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="homnay" aria-selected="true">Hôm nay</button>
+  <button role="tab" data-tab="ontap" aria-selected="false">Ôn tập</button>
+  <button role="tab" data-tab="buoihoc" aria-selected="false">Buổi học</button>
+  <button role="tab" data-tab="vongtron" aria-selected="false">Vòng tròn</button>
+  <button role="tab" data-tab="caidat" aria-selected="false">Cài đặt</button>
+</nav>
+</div>
+
+<script src="config.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

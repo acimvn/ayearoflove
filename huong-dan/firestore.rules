@@ -1,0 +1,53 @@
+rules_version = '2';
+// Quy tắc bảo vệ dữ liệu cho Vòng Tròn Phép Màu.
+// TRƯỚC KHI DÁN: thay EMAIL_CUA_BAN@gmail.com bằng email bạn dùng để đăng nhập app (viết thường).
+// Muốn thêm người cùng quản lý: ['email1@gmail.com', 'email2@gmail.com']
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && request.auth.token.email in ['EMAIL_CUA_BAN@gmail.com']; }
+    function isMember() { return signedIn() && exists(/databases/$(database)/documents/members/$(request.auth.uid)); }
+    function canRead() { return isMember() || isAdmin(); }
+
+    // Mã nhóm: chỉ người hướng dẫn đọc và đổi được.
+    match /config/secret {
+      allow read, write: if isAdmin();
+    }
+
+    // Hồ sơ và tiến trình của từng học viên.
+    match /members/{uid} {
+      allow read: if canRead() || (signedIn() && request.auth.uid == uid);
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.name is string && request.resource.data.name.size() <= 40
+        && (isAdmin() || request.resource.data.joinCode == get(/databases/$(database)/documents/config/secret).data.code);
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.joinCode == resource.data.joinCode
+        && request.resource.data.name is string && request.resource.data.name.size() <= 40;
+      allow delete: if isAdmin();
+    }
+
+    // Cảm nhận chia sẻ.
+    match /notes/{noteId} {
+      allow read: if canRead();
+      allow create: if isMember() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.t is string && request.resource.data.t.size() <= 1500
+        && request.resource.data.l is int;
+      allow delete: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    // Lịch Zoom và ghi chú bài học: học viên đọc, người hướng dẫn sửa.
+    match /sessions/{id} {
+      allow read: if canRead();
+      allow write: if isAdmin();
+    }
+    match /lessons/{id} {
+      allow read: if canRead();
+      allow write: if isAdmin();
+    }
+
+    // Cài đặt nhắc nhở: chỉ chính người đó đọc và sửa.
+    match /push/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+  }
+}

@@ -1,0 +1,42 @@
+name: Gửi nhắc nhở
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: reminders
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Cài thư viện
+        run: npm install --prefix cron --no-audit --no-fund
+      - name: Gửi nhắc nhở
+        run: node cron/send-reminders.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      # GitHub tự tắt lịch chạy nếu kho không có thay đổi trong 60 ngày.
+      # Bước này ghi một dòng nhỏ mỗi tháng để lịch chạy luôn bật.
+      - name: Giữ lịch chạy luôn bật
+        if: github.event_name == 'schedule'
+        run: |
+          MONTH="$(date -u +%Y-%m)"
+          if [ "$(cat cron/keepalive.txt 2>/dev/null)" != "$MONTH" ]; then
+            echo "$MONTH" > cron/keepalive.txt
+            git config user.name "github-actions"
+            git config user.email "github-actions@users.noreply.github.com"
+            git add cron/keepalive.txt
+            git commit -m "Giữ lịch nhắc nhở" && git push
+          fi
