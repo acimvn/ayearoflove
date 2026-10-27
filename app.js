@@ -95,7 +95,7 @@ const authMsg = (e) => AUTH_ERR[e && e.code] || "Có lỗi xảy ra: " + ((e && 
 const blank = () => ({ name: "", lesson: 1, completed: 0, days: 0, streak: 0, lastDate: "", petName: "Đốm Sáng", rem: { d: "", n: 0 }, joined: today(), joinCode: "" });
 const DEFAULT_PUSH = { morning: { on: true, at: "07:00" }, evening: { on: true, at: "21:00" }, hourly: { on: false, from: "08:00", to: "21:00", every: 60 }, zoom: true };
 let F = {}; // firebase functions
-let auth, db, messaging = null, swReg = null;
+let fapp, auth, db, messaging = null, swReg = null, storage = null, S = null;
 let uid = null, me = blank(), isAdmin = false, joinCode = "";
 let members = {}, sessions = [], lessons = {}, feed = [], myNotes = [], pushCfg = null;
 let unsubs = [], editingSession = null, reviewSel = null, reviewNoteOpen = false, reviewOthers = { n: 0, list: [] };
@@ -114,7 +114,7 @@ let unsubs = [], editingSession = null, reviewSel = null, reviewNoteOpen = false
     $("loading").textContent = "Không tải được app. Kiểm tra kết nối mạng rồi mở lại.";
     return;
   }
-  const fapp = F.initializeApp(CFG.firebase);
+  fapp = F.initializeApp(CFG.firebase);
   auth = F.getAuth(fapp);
   db = F.getFirestore(fapp);
   if (CFG.emulator) { F.connectAuthEmulator(auth, CFG.emulator.auth); F.connectFirestoreEmulator(db, CFG.emulator.host, CFG.emulator.port); }
@@ -258,9 +258,21 @@ function renderStage() {
     inp.onblur = done; inp.onkeydown = (e) => { if (e.key === "Enter") inp.blur(); };
   };
 }
-function lessonBlock(n) {
+// Audio players are kept between re-renders so playback is not interrupted.
+const audioEls = new Map();
+const audioSlot = (place, url) => `<div class="audio-box"><div class="label">Nghe hướng dẫn</div><div data-audio="${esc(url)}" data-place="${place}"></div></div>`;
+function mountAudio(root) {
+  root.querySelectorAll("[data-audio]").forEach((slot) => {
+    const key = slot.dataset.place + "|" + slot.dataset.audio;
+    let a = audioEls.get(key);
+    if (!a) { a = document.createElement("audio"); a.controls = true; a.preload = "metadata"; a.src = slot.dataset.audio; audioEls.set(key, a); }
+    slot.appendChild(a);
+  });
+}
+function lessonBlock(n, place = "today") {
   const ln = lessons["l" + n]; let h = "";
   if (ln && ln.title) h += `<h3>${esc(ln.title)}</h3>`;
+  if (ln && safeUrl(ln.audio)) h += audioSlot(place, safeUrl(ln.audio));
   if (ln && ln.note) h += `<div class="note">${esc(ln.note)}</div>`;
   if (ln && safeUrl(ln.link)) h += `<a class="link" href="${esc(safeUrl(ln.link))}" target="_blank" rel="noopener">Đọc bài ${n}</a>`;
   return h;
@@ -273,6 +285,7 @@ function renderLesson() {
   else h += `<p class="muted small">Mỗi ngày chỉ một bài. Nếu thấy cần, bạn có thể ở lại bài này thêm một ngày.</p>
     <div class="row"><button class="btn gold" id="doneBtn">Đã thực hành, sang bài ${Math.min(365, n + 1)}</button><button class="btn ghost small" id="stayBtn">Ở lại bài ${n}</button></div>`;
   $("lessonCard").innerHTML = h;
+  mountAudio($("lessonCard"));
   if ($("doneBtn")) $("doneBtn").onclick = () => practice(true);
   if ($("stayBtn")) $("stayBtn").onclick = () => practice(false);
   if ($("restart")) $("restart").onclick = () => { me.lesson = 1; me.completed = 0; save(); renderAll(); };
@@ -360,11 +373,57 @@ $("sSave").onclick = async () => {
   } catch (e) { toast("Chưa lưu được buổi học."); }
   $("sSave").disabled = false;
 };
-$("lNo").oninput = () => { const l = lessons["l" + $("lNo").value]; $("lTitle").value = l ? l.title || "" : ""; $("lNote").value = l ? l.note || "" : ""; $("lLink").value = l ? l.link || "" : ""; };
+function fillLessonForm() {
+  const l = lessons["l" + $("lNo").value];
+  $("lTitle").value = l ? l.title || "" : ""; $("lNote").value = l ? l.note || "" : ""; $("lLink").value = l ? l.link || "" : "";
+  $("lAudio").value = "";
+  const now = $("lAudioNow");
+  if (l && safeUrl(l.audio)) {
+    now.innerHTML = `<audio controls preload="metadata" src="${esc(safeUrl(l.audio))}"></audio><button class="linkbtn" id="lAudioDel" type="button">Xoá audio này</button>`;
+    $("lAudioDel").onclick = (e) => removeAudio(e.target);
+  } else now.textContent = $("lNo").value ? "Bài này chưa có audio." : "";
+}
+$("lNo").oninput = fillLessonForm;
+async function loadStorage() {
+  if (!S) { S = await import(FB + "firebase-storage.js"); storage = S.getStorage(fapp); }
+}
+const AUDIO_TYPES = { mp3: "audio/mpeg", m4a: "audio/mp4", mp4: "audio/mp4", aac: "audio/aac", wav: "audio/wav", ogg: "audio/ogg", oga: "audio/ogg", webm: "audio/webm", amr: "audio/amr", caf: "audio/x-caf" };
+async function removeAudio(btn) {
+  const n = parseInt($("lNo").value, 10), l = lessons["l" + n]; if (!l || !l.audio) return;
+  if (!btn.dataset.armed) { btn.dataset.armed = "1"; btn.textContent = "Chạm lần nữa để xoá audio"; setTimeout(() => { if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = "Xoá audio này"; } }, 3000); return; }
+  try {
+    await F.setDoc(F.doc(db, "lessons", "l" + n), { ...l, audio: "", audioPath: "" });
+    if (l.audioPath) { await loadStorage(); S.deleteObject(S.ref(storage, l.audioPath)).catch(() => {}); }
+    lessons["l" + n] = { ...l, audio: "", audioPath: "" }; fillLessonForm(); toast("Đã xoá audio bài " + n + ".");
+  } catch (e) { toast("Chưa xoá được audio."); }
+}
 $("lSave").onclick = async () => {
   const n = parseInt($("lNo").value, 10); if (!(n >= 1 && n <= 365)) { toast("Số bài từ 1 đến 365."); return; }
-  try { await F.setDoc(F.doc(db, "lessons", "l" + n), { n, title: $("lTitle").value.trim(), note: $("lNote").value.trim(), link: $("lLink").value.trim() }); toast("Đã lưu ghi chú bài " + n + "."); }
-  catch (e) { toast("Chưa lưu được ghi chú."); }
+  const old = lessons["l" + n] || {};
+  const body = { n, title: $("lTitle").value.trim(), note: $("lNote").value.trim(), link: $("lLink").value.trim(), audio: old.audio || "", audioPath: old.audioPath || "" };
+  const f = $("lAudio").files[0], btn = $("lSave"), prog = $("lAudioProg");
+  btn.disabled = true;
+  try {
+    if (f) {
+      if (f.size > 25 * 1024 * 1024) { toast("Audio lớn hơn 25 MB. Hãy cắt ngắn hoặc nén nhỏ lại."); btn.disabled = false; return; }
+      const ext = ((f.name.split(".").pop() || "").toLowerCase().replace(/[^a-z0-9]/g, "")) || "mp3";
+      const type = f.type && f.type.startsWith("audio/") ? f.type : AUDIO_TYPES[ext] || "audio/mpeg";
+      await loadStorage();
+      const path = `audio/bai-${n}-${Date.now()}.${ext}`, r = S.ref(storage, path);
+      prog.hidden = false; prog.textContent = "Đang tải audio… 0%";
+      const task = S.uploadBytesResumable(r, f, { contentType: type });
+      await new Promise((res, rej) => task.on("state_changed", (s) => (prog.textContent = `Đang tải audio… ${Math.round((s.bytesTransferred / s.totalBytes) * 100)}%`), rej, res));
+      body.audio = await S.getDownloadURL(r); body.audioPath = path;
+      if (old.audioPath) S.deleteObject(S.ref(storage, old.audioPath)).catch(() => {});
+    }
+    await F.setDoc(F.doc(db, "lessons", "l" + n), body);
+    lessons["l" + n] = body; fillLessonForm();
+    toast(f ? "Đã lưu bài " + n + " cùng audio." : "Đã lưu ghi chú bài " + n + ".");
+  } catch (e) {
+    const code = (e && e.code) || "";
+    toast(code.includes("unauthorized") ? "Chưa có quyền tải audio. Kiểm tra lại Rules của Storage." : code.includes("storage/") ? "Chưa tải được audio. Kiểm tra Storage đã bật chưa." : "Chưa lưu được ghi chú.");
+  }
+  prog.hidden = true; btn.disabled = false;
 };
 
 /* Circle */
@@ -405,7 +464,7 @@ function renderReview() {
   $("reviewGrid").querySelectorAll("button").forEach((b) => (b.onclick = () => { reviewSel = +b.dataset.l; reviewNoteOpen = false; renderReview(); $("reviewDetail").scrollIntoView({ behavior: "smooth", block: "start" }); }));
   const n = reviewSel, mine = mineBy[n] || [];
   let h = `<div class="row" style="justify-content:space-between"><div class="label">${n === cur ? "Bài hiện tại" : "Ôn lại"}</div><div class="row" style="gap:6px"><button class="btn ghost small" id="rvPrev" ${n <= 1 ? "disabled" : ""} aria-label="Bài trước">‹</button><button class="btn ghost small" id="rvNext" ${n >= max ? "disabled" : ""} aria-label="Bài sau">›</button></div></div>
-    <div class="lesson-no">Bài ${n}<em>/ 365</em></div>` + (lessonBlock(n) || `<p class="muted">Bài này chưa có ghi chú từ người hướng dẫn.</p>`);
+    <div class="lesson-no">Bài ${n}<em>/ 365</em></div>` + (lessonBlock(n, "review") || `<p class="muted">Bài này chưa có ghi chú từ người hướng dẫn.</p>`);
   h += `<div class="label" style="margin-top:6px">Cảm nhận của bạn</div>`;
   h += mine.length ? mine.map((x) => `<div class="mine"><div class="meta">${fmtDate(x.ts)}</div><p>${esc(x.t)}</p></div>`).join("") : `<p class="empty">Bạn chưa viết gì cho bài này.</p>`;
   h += reviewNoteOpen
@@ -414,6 +473,7 @@ function renderReview() {
   const others = reviewOthers.n === n ? reviewOthers.list : [];
   if (others.length) h += `<div class="label" style="margin-top:6px">Cả nhóm chia sẻ về bài này</div>` + others.slice(0, 30).map((p) => postHTML(p, false)).join("");
   $("reviewDetail").innerHTML = h;
+  mountAudio($("reviewDetail"));
   $("rvPrev").onclick = () => { reviewSel = n - 1; reviewNoteOpen = false; renderReview(); };
   $("rvNext").onclick = () => { reviewSel = n + 1; reviewNoteOpen = false; renderReview(); };
   if ($("rvAdd")) $("rvAdd").onclick = () => { reviewNoteOpen = true; renderReview(); $("rvText").focus(); };
